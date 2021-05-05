@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-pipeline
+spec:
+  workspaces:
+    - name: git-source
+  params:
+    - name: pathToYamlFile
+      description: The path to the yaml file to deploy within the git source
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: git-source
+      params:
+        - name: url
+          value: https://github.com/Solverj/person-svc-java.git
+        - name: sslVerify
+          value: "false"
+        - name: deleteExisting
+          value: "true"
+    - name: build-and-package
+      taskRef:
+        name: mvn
+      runAfter:
+        - clone-repo
+      workspaces:
+        - name: output
+          workspace: git-source
+    - name: source-to-image
+      taskRef:
+        name: kaniko
+      runAfter:
+        - build-and-package
+      workspaces:
+        - name: source
+          workspace: git-source
+      params:
+        - name: IMAGE
+          value: 10.152.183.247:5000/person-svc
+        - name: EXTRA_ARGS
+          value: "--skip-tls-verify"
+    - name: deploy-to-cluster
+      taskRef:
+        name: deploy-using-kubectl
+      workspaces:
+        - name: git-source
+          workspace: git-source
+      params:
+        - name: pathToYamlFile
+          value: $(params.pathToYamlFile)
+        - name: imageUrl
+          value: localhost:32000/person-svc
+        - name: imageDigest
+          value: $(tasks.source-to-image.results.IMAGE-DIGEST)

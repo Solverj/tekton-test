@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: build-pipeline-run
+spec:
+  serviceAccountName: tutorial-service
+  pipelineRef:
+    name: build-pipeline
+  params:
+    - name: pathToYamlFile
+      value: knative/person-svc.yaml
+  workspaces:
+    - name: git-source
+      persistentVolumeClaim:
+        claimName: git-source-pvc

@@ -1,0 +1,10 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ping
+spec:
+  steps:
+    - name: pingpong
+      image: gcr.io/cloud-builders/mvn
+      command: ["curl"]
+      args: ["10.152.183.238:5000/v2"]

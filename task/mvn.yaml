@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mvn
+spec:
+  workspaces:
+    - name: output
+  steps:
+    - name: mvn-spring
+      image: gcr.io/cloud-builders/mvn
+      command: ["mvn"]
+      args: ["clean", "package", "spring-boot:repackage"]
+      workingDir: "/workspace/output"
